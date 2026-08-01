@@ -25,66 +25,59 @@ function getClosedParams(angle, targetScale, isSepal = false) {
     return {
       rotate: angle * 0.15,
       scaleX: targetScale * (isSepal ? 0.22 : 0.12),
-      scaleY: targetScale * (isSepal ? 0.40 : 0.46),
-      opacity: isSepal ? 1.0 : 0.8
+      scaleY: targetScale * (isSepal ? 0.40 : 0.46)
     };
   } else {
     return {
       rotate: angle,
       scaleX: 0,
-      scaleY: 0,
-      opacity: 0
+      scaleY: 0
     };
   }
 }
 
 // =========================================================
 // GENERACIÓN DE PÉTALOS OPTIMIZADOS (Unificado para todas las flores)
-// Reducimos a 95 elementos para garantizar una fluidez del 100%
-// en la fase de transición/brote en móviles Android.
+// 54 pétalos por flor (62 elementos con sépalos). Total del DOM = 186 paths.
+// Máximo rendimiento y fluidez del 100% en pantallas móviles Android.
 // =========================================================
-const sideOuterPetals = Array.from({ length: 18 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 18) + (Math.random() - 0.5) * 1.5;
+const sideOuterPetals = Array.from({ length: 12 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 1.5;
   const scale = 0.98 + Math.random() * 0.04;
-  const opacity = 0.95 + Math.random() * 0.05;
   const closed = getClosedParams(rotate, scale, false);
-  return { rotate, scale, opacity, closed };
+  return { rotate, scale, closed };
 });
 
-const sideMiddlePetals = Array.from({ length: 15 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 15, 9) + (Math.random() - 0.5) * 1.8;
+const sideMiddlePetals = Array.from({ length: 10 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 10, 9) + (Math.random() - 0.5) * 1.8;
   const scale = 0.82 + Math.random() * 0.04;
-  const opacity = 0.94 + Math.random() * 0.06;
   const closed = getClosedParams(rotate, scale, false);
-  return { rotate, scale, opacity, closed };
+  return { rotate, scale, closed };
 });
 
-const sideInnerPetals = Array.from({ length: 12 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 12, 5) + (Math.random() - 0.5) * 2.0;
+const sideInnerPetals = Array.from({ length: 8 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 8, 5) + (Math.random() - 0.5) * 2.0;
   const scale = 0.68 + Math.random() * 0.03;
-  const opacity = 0.92 + Math.random() * 0.06;
   const closed = getClosedParams(rotate, scale, false);
-  return { rotate, scale, opacity, closed };
+  return { rotate, scale, closed };
 });
 
-const sideMiniPetals = Array.from({ length: 18 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 18, 7) + (Math.random() - 0.5) * 2.2;
+const sideMiniPetals = Array.from({ length: 12 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 12, 7) + (Math.random() - 0.5) * 2.2;
   const scale = 0.50 + Math.random() * 0.03;
-  const opacity = 0.90 + Math.random() * 0.08;
   const closed = getClosedParams(rotate, scale, false);
-  return { rotate, scale, opacity, closed };
+  return { rotate, scale, closed };
 });
 
-const sideDiscRingPetals = Array.from({ length: 20 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 20) + (Math.random() - 0.5) * 2.5;
+const sideDiscRingPetals = Array.from({ length: 12 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 2.5;
   const scale = 0.34 + Math.random() * 0.02;
-  const opacity = 0.85 + Math.random() * 0.10;
   const closed = getClosedParams(rotate, scale, false);
-  return { rotate, scale, opacity, closed };
+  return { rotate, scale, closed };
 });
 
-const sideSepals = Array.from({ length: 12 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 1.2;
+const sideSepals = Array.from({ length: 8 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 8) + (Math.random() - 0.5) * 1.2;
   const scale = 1.0 + Math.random() * 0.05;
   const closed = getClosedParams(rotate, scale, true);
   return { rotate, scale, closed };
@@ -159,8 +152,6 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
 
       /* -------------------------------------------------------------
          2. GRUPOS DE FLORES (Movimiento Orgánico de Balanceo)
-         Swaying simplificado: el grupo entero se balancea como una
-         sola textura plana. Sin animaciones anidadas internas.
          ------------------------------------------------------------- */
       .flower-group {
         transform-origin: 400px 800px;
@@ -177,7 +168,6 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
 
       /* -------------------------------------------------------------
          3. ELEVACIÓN DE LOS CAPULLOS (Flower Head Wrappers)
-         Crecimiento y rotación base estáticos una vez finalizados.
          ------------------------------------------------------------- */
       .flower-head-wrapper {
         transform-origin: 0px 0px; 
@@ -210,21 +200,20 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
 
       /* -------------------------------------------------------------
          4. ANATOMÍA INTERNA DE PÉTALOS Y SÉPALOS
-         Usamos curvas de aceleración suaves sin rebote/overshoot (monotónicas)
-         para permitir que las GPUs móviles rendericen de forma mucho más barata.
+         Statically declared opacity to prevent expensive alpha-blending
+         calculations in Android's graphics compositor.
          ------------------------------------------------------------- */
-      .sepal {
-        transform-origin: 0px 0px;
-        transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
-        opacity: var(--closed-opacity);
-        transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s, 
-                    opacity 1.5s ease-in-out 1.2s;
-      }
-
       .petal {
         transform-origin: 0px 0px;
         transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
-        opacity: var(--closed-opacity);
+        opacity: 0.95;
+      }
+
+      .sepal {
+        transform-origin: 0px 0px;
+        transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
+        opacity: 1;
+        transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s;
       }
 
       .center-core {
@@ -258,41 +247,39 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
 
       /* -------------------------------------------------------------
          6. APERTURA ESCALONADA DE PÉTALOS POR FLOR
-         Transición monotónica (ease-out limpia)
+         Transición monotónica y limpia (Únicamente Transform)
          ------------------------------------------------------------- */
       
       /* Flor Central (Main) */
-      .center-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.2s, opacity 0.6s ease-in 1.3s; }
-      .center-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.4s, opacity 0.6s ease-in 1.5s; }
-      .center-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
-      .center-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
-      .center-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
+      .center-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.2s; }
+      .center-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.4s; }
+      .center-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 1.6s; }
+      .center-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 1.8s; }
+      .center-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.0s; }
 
       /* Flor Izquierda */
-      .left-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
-      .left-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
-      .left-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
-      .left-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.2s, opacity 0.6s ease-in 2.3s; }
-      .left-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.4s, opacity 0.6s ease-in 2.5s; }
+      .left-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.6s; }
+      .left-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.8s; }
+      .left-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.0s; }
+      .left-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.2s; }
+      .left-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.4s; }
 
       /* Flor Derecha */
-      .right-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.9s, opacity 0.6s ease-in 2.0s; }
-      .right-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 2.1s, opacity 0.6s ease-in 2.2s; }
-      .right-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.3s, opacity 0.6s ease-in 2.4s; }
-      .right-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.5s, opacity 0.6s ease-in 2.6s; }
-      .right-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.7s, opacity 0.6s ease-in 2.8s; }
+      .right-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.9s; }
+      .right-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 2.1s; }
+      .right-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.3s; }
+      .right-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.5s; }
+      .right-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.7s; }
 
       /* -------------------------------------------------------------
          7. COMPORTAMIENTO ABIERTO
          ------------------------------------------------------------- */
       .open .sepal {
         transform: rotate(calc(var(--target-rotate) * 1.3)) scale(calc(var(--target-scale) * 0.45)) translateY(120px);
-        opacity: 0;
       }
 
       .open .petal {
         transform: rotate(var(--target-rotate)) scale(var(--target-scale));
-        opacity: var(--target-opacity);
       }
 
       .open .center-core {
@@ -456,29 +443,29 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
             </g>
             <!-- Left Head -->
             <g class="flower-head-wrapper left-flower" id="flower-head-wrapper-left">
-              <!-- Outer Petals (Reduced Count) -->
+              <!-- Outer Petals -->
               {sideOuterPetals.map(p => (
-                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Middle Petals -->
               {sideMiddlePetals.map(p => (
-                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Inner Petals -->
               {sideInnerPetals.map(p => (
-                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Mini Petals -->
               {sideMiniPetals.map(p => (
-                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Disc Petals -->
               {sideDiscRingPetals.map(p => (
-                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Sepals -->
               {sideSepals.map(s => (
-                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" />
+                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY};`} fill="url(#sepal-grad)" />
               ))}
               <!-- Center Core -->
               <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" />
@@ -507,29 +494,29 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
             </g>
             <!-- Right Head -->
             <g class="flower-head-wrapper right-flower" id="flower-head-wrapper-right">
-              <!-- Outer Petals (Reduced Count) -->
+              <!-- Outer Petals -->
               {sideOuterPetals.map(p => (
-                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Middle Petals -->
               {sideMiddlePetals.map(p => (
-                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Inner Petals -->
               {sideInnerPetals.map(p => (
-                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Mini Petals -->
               {sideMiniPetals.map(p => (
-                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Disc Petals -->
               {sideDiscRingPetals.map(p => (
-                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Sepals -->
               {sideSepals.map(s => (
-                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" />
+                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY};`} fill="url(#sepal-grad)" />
               ))}
               <!-- Center Core -->
               <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" />
@@ -573,29 +560,29 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
             </g>
             <!-- Center Head -->
             <g class="flower-head-wrapper center-flower" id="flower-head-wrapper">
-              <!-- Outer Petals (Optimized: Utiliza los side arrays de 95 pétalos) -->
+              <!-- Outer Petals -->
               {sideOuterPetals.map(p => (
-                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Middle Petals -->
               {sideMiddlePetals.map(p => (
-                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Inner Petals -->
               {sideInnerPetals.map(p => (
-                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Mini Petals -->
               {sideMiniPetals.map(p => (
-                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Disc Petals -->
               {sideDiscRingPetals.map(p => (
-                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY};`} fill="url(#petal-grad)" />
               ))}
               <!-- Sepals -->
               {sideSepals.map(s => (
-                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" />
+                <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY};`} fill="url(#sepal-grad)" />
               ))}
               <!-- Center Core -->
               <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" />
@@ -657,8 +644,7 @@ const sideSepals = Array.from({ length: 12 }, (_, i) => {
         const rot = (Math.random() - 0.5) * 60;
         
         const anim = seed.animate([
-          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
-          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.7, offset: 0.1 },
+          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.6 },
           { transform: `translate(${endX - startX}px, ${endY - startY}px) rotate(${rot}deg)`, opacity: 0 }
         ], {
           duration: duration,
