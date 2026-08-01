@@ -114,16 +114,11 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
     <style>
       /* -------------------------------------------------------------
          0. COMPOSICIÓN Y HARDWARE ACCELERATION (GPU)
-         Promovemos los grupos raíz y condicionamos el will-change de los pétalos.
+         Promovemos solo los grupos raíz que se mueven en la pantalla.
+         No promovemos pétalos ni sépalos individuales para evitar agotar la VRAM.
          ------------------------------------------------------------- */
       .flower-group,
       .grass {
-        will-change: transform;
-      }
-
-      /* Promoción temporal de capas GPU durante el brote para evitar cuellos de botella */
-      .will-animate-petals .petal,
-      .will-animate-petals .sepal {
         will-change: transform;
       }
 
@@ -607,8 +602,8 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
 
       <!-- Secret Message Overlay: Positioned at the bottom (Centered on X, responsive block) -->
       <div class="absolute bottom-[8%] left-1/2 w-[90%] max-w-[500px] pointer-events-none z-50 text-center" id="love-message-card">
-        <!-- Glassmorphic dark container styled to look beautiful on both mobile and PC -->
-        <div class="bg-[#0b0816]/80 backdrop-blur-[12px] border border-white/10 rounded-2xl px-6 py-4.5 shadow-[0_15px_30px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] flex justify-center items-center">
+        <!-- Sleek solid-opacity container (Option A) to avoid backdrop-filter costs on mobile GPUs -->
+        <div class="bg-[#0b0816]/94 border border-white/10 rounded-2xl px-6 py-4.5 shadow-[0_15px_30px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] flex justify-center items-center">
           <span class="font-display italic text-[clamp(1.05rem,2.5vw,1.3rem)] font-normal leading-relaxed tracking-wider text-[#fffdfa] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
             {message}
           </span>
@@ -881,7 +876,7 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
 
         if (flowerContainer && messageCard && flowerSvg) {
           flowerContainer.addEventListener('click', (event) => {
-            // Cancel any pending settled/will-change timeouts
+            // Cancel any pending settled timeouts
             if (cleanupTimeout) {
               clearTimeout(cleanupTimeout);
               cleanupTimeout = null;
@@ -893,7 +888,6 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
             requestAnimationFrame(() => {
               // Add/remove visual states
               flowerContainer.classList.toggle('open', isOpening);
-              flowerContainer.classList.toggle('will-animate-petals', true);
               
               // Remove drop shadow filter immediately during transition to save GPU processing
               flowerSvg.classList.remove('settled');
@@ -919,7 +913,6 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
               // 2. Schedule cleanup once transitions complete (~4.2s delay covers the longest bloom + stagger)
               cleanupTimeout = setTimeout(() => {
                 requestAnimationFrame(() => {
-                  flowerContainer.classList.remove('will-animate-petals');
                   if (isOpening) {
                     flowerSvg.classList.add('settled');
                   }
