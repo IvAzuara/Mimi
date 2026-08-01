@@ -40,51 +40,51 @@ function getClosedParams(angle, targetScale, isSepal = false) {
 
 // =========================================================
 // GENERACIÓN DE PÉTALOS OPTIMIZADOS (Unificado para todas las flores)
-// Un total de 114 pétalos por capullo garantiza una densidad excelente
-// y una fluidez del 100% en pantallas móviles Android.
+// Reducimos a 95 elementos para garantizar una fluidez del 100%
+// en la fase de transición/brote en móviles Android.
 // =========================================================
-const sideOuterPetals = Array.from({ length: 24 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 24) + (Math.random() - 0.5) * 1.5;
+const sideOuterPetals = Array.from({ length: 18 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 18) + (Math.random() - 0.5) * 1.5;
   const scale = 0.98 + Math.random() * 0.04;
   const opacity = 0.95 + Math.random() * 0.05;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, opacity, closed };
 });
 
-const sideMiddlePetals = Array.from({ length: 20 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 20, 9) + (Math.random() - 0.5) * 1.8;
+const sideMiddlePetals = Array.from({ length: 15 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 15, 9) + (Math.random() - 0.5) * 1.8;
   const scale = 0.82 + Math.random() * 0.04;
   const opacity = 0.94 + Math.random() * 0.06;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, opacity, closed };
 });
 
-const sideInnerPetals = Array.from({ length: 16 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 16, 5) + (Math.random() - 0.5) * 2.0;
+const sideInnerPetals = Array.from({ length: 12 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 12, 5) + (Math.random() - 0.5) * 2.0;
   const scale = 0.68 + Math.random() * 0.03;
   const opacity = 0.92 + Math.random() * 0.06;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, opacity, closed };
 });
 
-const sideMiniPetals = Array.from({ length: 24 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 24, 7) + (Math.random() - 0.5) * 2.2;
+const sideMiniPetals = Array.from({ length: 18 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 18, 7) + (Math.random() - 0.5) * 2.2;
   const scale = 0.50 + Math.random() * 0.03;
   const opacity = 0.90 + Math.random() * 0.08;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, opacity, closed };
 });
 
-const sideDiscRingPetals = Array.from({ length: 30 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 30) + (Math.random() - 0.5) * 2.5;
+const sideDiscRingPetals = Array.from({ length: 20 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 20) + (Math.random() - 0.5) * 2.5;
   const scale = 0.34 + Math.random() * 0.02;
   const opacity = 0.85 + Math.random() * 0.10;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, opacity, closed };
 });
 
-const sideSepals = Array.from({ length: 16 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 16) + (Math.random() - 0.5) * 1.2;
+const sideSepals = Array.from({ length: 12 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 1.2;
   const scale = 1.0 + Math.random() * 0.05;
   const closed = getClosedParams(rotate, scale, true);
   return { rotate, scale, closed };
@@ -210,12 +210,14 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
 
       /* -------------------------------------------------------------
          4. ANATOMÍA INTERNA DE PÉTALOS Y SÉPALOS
+         Usamos curvas de aceleración suaves sin rebote/overshoot (monotónicas)
+         para permitir que las GPUs móviles rendericen de forma mucho más barata.
          ------------------------------------------------------------- */
       .sepal {
         transform-origin: 0px 0px;
         transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
         opacity: var(--closed-opacity);
-        transition: transform 1.8s cubic-bezier(0.34, 1.25, 0.64, 1) 1.2s, 
+        transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1) 1.2s, 
                     opacity 1.5s ease-in-out 1.2s;
       }
 
@@ -228,7 +230,7 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
       .center-core {
         transform-origin: 0px 0px;
         transform: scale(0);
-        transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s;
+        transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.8s;
       }
 
       /* -------------------------------------------------------------
@@ -237,7 +239,7 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
       .leaf path {
         transform-origin: 0px 0px;
         transform: scale(0);
-        transition: transform 1.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+        transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1);
       }
 
       /* Center Leaves */
@@ -256,28 +258,29 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
 
       /* -------------------------------------------------------------
          6. APERTURA ESCALONADA DE PÉTALOS POR FLOR
+         Transición monotónica (ease-out limpia)
          ------------------------------------------------------------- */
       
       /* Flor Central (Main) */
-      .center-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.2s, opacity 0.6s ease-in 1.3s; }
-      .center-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 1.4s, opacity 0.6s ease-in 1.5s; }
-      .center-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
-      .center-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
-      .center-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
+      .center-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.2s, opacity 0.6s ease-in 1.3s; }
+      .center-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.4s, opacity 0.6s ease-in 1.5s; }
+      .center-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
+      .center-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
+      .center-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
 
       /* Flor Izquierda */
-      .left-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
-      .left-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
-      .left-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
-      .left-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 2.2s, opacity 0.6s ease-in 2.3s; }
-      .left-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.4s, opacity 0.6s ease-in 2.5s; }
+      .left-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
+      .left-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
+      .left-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
+      .left-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.2s, opacity 0.6s ease-in 2.3s; }
+      .left-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.4s, opacity 0.6s ease-in 2.5s; }
 
       /* Flor Derecha */
-      .right-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.9s, opacity 0.6s ease-in 2.0s; }
-      .right-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 2.1s, opacity 0.6s ease-in 2.2s; }
-      .right-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 2.3s, opacity 0.6s ease-in 2.4s; }
-      .right-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 2.5s, opacity 0.6s ease-in 2.6s; }
-      .right-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.7s, opacity 0.6s ease-in 2.8s; }
+      .right-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.25, 1, 0.5, 1) 1.9s, opacity 0.6s ease-in 2.0s; }
+      .right-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) 2.1s, opacity 0.6s ease-in 2.2s; }
+      .right-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2.3s, opacity 0.6s ease-in 2.4s; }
+      .right-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.25, 1, 0.5, 1) 2.5s, opacity 0.6s ease-in 2.6s; }
+      .right-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 2.7s, opacity 0.6s ease-in 2.8s; }
 
       /* -------------------------------------------------------------
          7. COMPORTAMIENTO ABIERTO
@@ -570,7 +573,7 @@ const sideSepals = Array.from({ length: 16 }, (_, i) => {
             </g>
             <!-- Center Head -->
             <g class="flower-head-wrapper center-flower" id="flower-head-wrapper">
-              <!-- Outer Petals (Optimized: Utiliza los side arrays de 114 pétalos) -->
+              <!-- Outer Petals (Optimized: Utiliza los side arrays de 95 pétalos) -->
               {sideOuterPetals.map(p => (
                 <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
               ))}
