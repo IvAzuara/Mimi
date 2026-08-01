@@ -37,47 +37,47 @@ function getClosedParams(angle, targetScale, isSepal = false) {
 }
 
 // =========================================================
-// GENERACIÓN DE PÉTALOS OPTIMIZADOS (Unificado para todas las flores)
-// 54 pétalos por flor (62 elementos con sépalos). Total del DOM = 186 paths.
-// Máximo rendimiento y fluidez del 100% en pantallas móviles Android.
+// GENERACIÓN DE PÉTALOS - RESTAURADA AL MÁXIMO DE DENSIDAD
+// 168 pétalos por flor para recrear una Gerbera espectacular y llena.
+// Se mantienen las optimizaciones de GPU y transición para mantener la fluidez.
 // =========================================================
-const sideOuterPetals = Array.from({ length: 12 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 1.5;
+const sideOuterPetals = Array.from({ length: 36 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 36) + (Math.random() - 0.5) * 1.5;
   const scale = 0.98 + Math.random() * 0.04;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, closed };
 });
 
-const sideMiddlePetals = Array.from({ length: 10 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 10, 9) + (Math.random() - 0.5) * 1.8;
+const sideMiddlePetals = Array.from({ length: 30 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 30, 6) + (Math.random() - 0.5) * 1.8;
   const scale = 0.82 + Math.random() * 0.04;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, closed };
 });
 
-const sideInnerPetals = Array.from({ length: 8 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 8, 5) + (Math.random() - 0.5) * 2.0;
+const sideInnerPetals = Array.from({ length: 24 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 24, 3) + (Math.random() - 0.5) * 2.0;
   const scale = 0.68 + Math.random() * 0.03;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, closed };
 });
 
-const sideMiniPetals = Array.from({ length: 12 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 12, 7) + (Math.random() - 0.5) * 2.2;
+const sideMiniPetals = Array.from({ length: 36 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 36, 5) + (Math.random() - 0.5) * 2.2;
   const scale = 0.50 + Math.random() * 0.03;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, closed };
 });
 
-const sideDiscRingPetals = Array.from({ length: 12 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 12) + (Math.random() - 0.5) * 2.5;
+const sideDiscRingPetals = Array.from({ length: 42 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 42) + (Math.random() - 0.5) * 2.5;
   const scale = 0.34 + Math.random() * 0.02;
   const closed = getClosedParams(rotate, scale, false);
   return { rotate, scale, closed };
 });
 
-const sideSepals = Array.from({ length: 8 }, (_, i) => {
-  const rotate = getSymmetricAngle(i, 8) + (Math.random() - 0.5) * 1.2;
+const sideSepals = Array.from({ length: 16 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 16) + (Math.random() - 0.5) * 1.2;
   const scale = 1.0 + Math.random() * 0.05;
   const closed = getClosedParams(rotate, scale, true);
   return { rotate, scale, closed };
@@ -168,6 +168,7 @@ const sideSepals = Array.from({ length: 8 }, (_, i) => {
 
       /* -------------------------------------------------------------
          3. ELEVACIÓN DE LOS CAPULLOS (Flower Head Wrappers)
+         Crecimiento y rotación base estáticos una vez finalizados.
          ------------------------------------------------------------- */
       .flower-head-wrapper {
         transform-origin: 0px 0px; 
@@ -200,8 +201,7 @@ const sideSepals = Array.from({ length: 8 }, (_, i) => {
 
       /* -------------------------------------------------------------
          4. ANATOMÍA INTERNA DE PÉTALOS Y SÉPALOS
-         Statically declared opacity to prevent expensive alpha-blending
-         calculations in Android's graphics compositor.
+         Opacidad estática para evitar cálculos de transparencia en GPU móvil.
          ------------------------------------------------------------- */
       .petal {
         transform-origin: 0px 0px;
