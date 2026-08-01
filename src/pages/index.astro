@@ -1,0 +1,988 @@
+---
+/**
+ * Mimi - Tres Gerberas Blancas en un Jardín Místico
+ * Astro Page - Ecosistema orgánico con balanceo al viento y brote escalonado.
+ * Modifica la variable 'message' para cambiar el mensaje secreto del centro.
+ */
+
+// Mensaje secreto y romántico con la justificación del halago
+const message = "Me pediste que te dijera lo bonita que eres... y me quedé pensando. Decirte 'bonita' se siente como decir muy poco para alguien que se ha vuelto indispensable en mi vida, alguien por quien daría cualquier cosa con tal de verte sonreír";
+
+// Helper para calcular ángulos simétricos en el rango (-180, 180]
+function getSymmetricAngle(i, total, offset = 0) {
+  let angle = i * (360 / total) + offset;
+  while (angle > 180) angle -= 360;
+  while (angle <= -180) angle += 360;
+  return angle;
+}
+
+// Helper para determinar los parámetros del estado cerrado (Phase 1)
+function getClosedParams(angle, targetScale, isSepal = false) {
+  const threshold = 40;
+  const isNearTop = Math.abs(angle) <= threshold;
+
+  if (isNearTop) {
+    return {
+      rotate: angle * 0.15,
+      scaleX: targetScale * (isSepal ? 0.22 : 0.12),
+      scaleY: targetScale * (isSepal ? 0.40 : 0.46),
+      opacity: isSepal ? 1.0 : 0.8
+    };
+  } else {
+    return {
+      rotate: angle,
+      scaleX: 0,
+      scaleY: 0,
+      opacity: 0
+    };
+  }
+}
+
+// Generar pétalos de Gerbera
+const outerPetals = Array.from({ length: 36 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 36) + (Math.random() - 0.5) * 1.5;
+  const scale = 0.98 + Math.random() * 0.04;
+  const opacity = 0.95 + Math.random() * 0.05;
+  const closed = getClosedParams(rotate, scale, false);
+  return { rotate, scale, opacity, closed };
+});
+
+const middlePetals = Array.from({ length: 30 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 30, 6) + (Math.random() - 0.5) * 1.8;
+  const scale = 0.82 + Math.random() * 0.04;
+  const opacity = 0.94 + Math.random() * 0.06;
+  const closed = getClosedParams(rotate, scale, false);
+  return { rotate, scale, opacity, closed };
+});
+
+const innerPetals = Array.from({ length: 24 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 24, 3) + (Math.random() - 0.5) * 2.0;
+  const scale = 0.68 + Math.random() * 0.03;
+  const opacity = 0.92 + Math.random() * 0.06;
+  const closed = getClosedParams(rotate, scale, false);
+  return { rotate, scale, opacity, closed };
+});
+
+const miniPetals = Array.from({ length: 36 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 36, 5) + (Math.random() - 0.5) * 2.2;
+  const scale = 0.50 + Math.random() * 0.03;
+  const opacity = 0.90 + Math.random() * 0.08;
+  const closed = getClosedParams(rotate, scale, false);
+  return { rotate, scale, opacity, closed };
+});
+
+const discRingPetals = Array.from({ length: 48 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 48) + (Math.random() - 0.5) * 2.5;
+  const scale = 0.34 + Math.random() * 0.02;
+  const opacity = 0.85 + Math.random() * 0.10;
+  const closed = getClosedParams(rotate, scale, false);
+  return { rotate, scale, opacity, closed };
+});
+
+// Generar Sépalos Verdes
+const sepals = Array.from({ length: 24 }, (_, i) => {
+  const rotate = getSymmetricAngle(i, 24) + (Math.random() - 0.5) * 1.2;
+  const scale = 1.0 + Math.random() * 0.05;
+  const closed = getClosedParams(rotate, scale, true);
+  return { rotate, scale, closed };
+});
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mimi // Un Jardín de Gerberas para Ti</title>
+    <meta name="description" content="Una experiencia interactiva con un jardín místico de gerberas blancas que reaccionan al viento." />
+    
+    <!-- Google Fonts: Playfair Display (Romantic Serif) & Outfit (Modern Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400&family=Playfair+Display:ital,wght=1,400;1,600&display=swap" rel="stylesheet" />
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com" is:inline></script>
+    <script is:inline>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'sans-serif'],
+              display: ['Playfair Display', 'serif'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Scoped Interactive Animations -->
+    <style>
+      /* -------------------------------------------------------------
+         1. CRECIMIENTO DEL TALLO Y HIERBAS SILUETAS
+         ------------------------------------------------------------- */
+      .stem {
+        stroke-dasharray: 550;
+        stroke-dashoffset: 550;
+      }
+
+      .stem-center { transition: stroke-dashoffset 2.2s cubic-bezier(0.25, 1, 0.5, 1) 0.2s; }
+      .stem-left { transition: stroke-dashoffset 2.2s cubic-bezier(0.25, 1, 0.5, 1) 0.6s; }
+      .stem-right { transition: stroke-dashoffset 2.2s cubic-bezier(0.25, 1, 0.5, 1) 0.9s; }
+
+      .open .stem {
+        stroke-dashoffset: 0;
+      }
+
+      .grass {
+        fill: url(#grass-grad);
+        transform-origin: 400px 800px;
+        transform: scaleY(0);
+        transition: transform 2.5s cubic-bezier(0.25, 1, 0.5, 1) 0.5s;
+        opacity: 0.75;
+      }
+
+      .open .grass {
+        transform: scaleY(1);
+      }
+
+      /* -------------------------------------------------------------
+         2. GRUPOS DE FLORES (Movimiento Orgánico de Balanceo)
+         ------------------------------------------------------------- */
+      .flower-group {
+        transform-origin: 400px 800px;
+        transition: transform 0.5s ease-out;
+      }
+
+      .center-group { transform-origin: 390px 800px; }
+      .left-group { transform-origin: 360px 800px; }
+      .right-group { transform-origin: 440px 800px; }
+
+      .open.center-group { animation: group-sway-center 8s ease-in-out infinite 2.2s; }
+      .open.left-group { animation: group-sway-left 9s ease-in-out infinite 2.6s; }
+      .open.right-group { animation: group-sway-right 7.5s ease-in-out infinite 2.9s; }
+
+      /* -------------------------------------------------------------
+         3. ELEVACIÓN DE LOS CAPULLOS (Flower Head Wrappers)
+         ------------------------------------------------------------- */
+      .flower-head-wrapper {
+        transform-origin: 0px 0px; 
+        transition: transform 2.2s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+
+      .flower-head-wrapper.center-flower {
+        transform: translate(390px, 800px) scale(0.15);
+        transition-delay: 0.2s;
+      }
+      .open .flower-head-wrapper.center-flower {
+        transform: translate(400px, 300px) scale(1);
+        animation: head-nod-center 8s ease-in-out infinite 2.2s;
+      }
+
+      .flower-head-wrapper.left-flower {
+        transform: translate(360px, 800px) scale(0.1);
+        transition-delay: 0.6s;
+      }
+      .open .flower-head-wrapper.left-flower {
+        transform: translate(250px, 420px) scale(0.75) rotate(-25deg);
+        animation: head-nod-left 9s ease-in-out infinite 2.6s;
+      }
+
+      .flower-head-wrapper.right-flower {
+        transform: translate(440px, 800px) scale(0.1);
+        transition-delay: 0.9s;
+      }
+      .open .flower-head-wrapper.right-flower {
+        transform: translate(550px, 450px) scale(0.7) rotate(20deg);
+        animation: head-nod-right 7.5s ease-in-out infinite 2.9s;
+      }
+
+      /* Hover & Click Elastic Wobble */
+      .flower-container:hover .open.flower-head-wrapper.center-flower {
+        transform: translate(400px, 300px) scale(1.03) rotate(2.5deg);
+        animation: none;
+      }
+
+      /* -------------------------------------------------------------
+         4. ANATOMÍA INTERNA Y BUCLE RESPIRATORIO
+         ------------------------------------------------------------- */
+      .flower-head-inner {
+        transform-origin: 0px 0px;
+        transition: transform 0.8s ease-out;
+      }
+
+      .open .flower-head-inner {
+        animation: gentle-breath 5s ease-in-out infinite alternate 2.2s;
+      }
+
+      .sepal {
+        transform-origin: 0px 0px;
+        transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
+        opacity: var(--closed-opacity);
+        transition: transform 1.8s cubic-bezier(0.34, 1.25, 0.64, 1) 1.2s, 
+                    opacity 1.5s ease-in-out 1.2s;
+      }
+
+      .petal {
+        transform-origin: 0px 0px;
+        transform: rotate(var(--closed-rotate)) scale(var(--closed-scale-x), var(--closed-scale-y));
+        opacity: var(--closed-opacity);
+      }
+
+      .center-core {
+        transform-origin: 0px 0px;
+        transform: scale(0);
+        transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s;
+      }
+
+      /* -------------------------------------------------------------
+         5. BROTE ESCALONADO DE HOJAS
+         ------------------------------------------------------------- */
+      .leaf path {
+        transform-origin: 0px 0px;
+        transform: scale(0);
+        transition: transform 1.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+      }
+
+      /* Center Leaves */
+      .open .center-group .leaf-l1 path, .open .center-group .leaf-r1 path { transform: scale(1); transition-delay: 0.8s; }
+      .open .center-group .leaf-l2 path, .open .center-group .leaf-r2 path { transform: scale(1); transition-delay: 1.2s; }
+      .open .center-group .leaf-l3 path, .open .center-group .leaf-r3 path { transform: scale(1); transition-delay: 1.6s; }
+
+      /* Side Leaves */
+      .open .left-group .leaf path { transform: scale(1); }
+      .open .left-group .leaf-l1 path { transition-delay: 1.1s; }
+      .open .left-group .leaf-l2 path { transition-delay: 1.5s; }
+
+      .open .right-group .leaf path { transform: scale(1); }
+      .open .right-group .leaf-r1 path { transition-delay: 1.3s; }
+      .open .right-group .leaf-r2 path { transition-delay: 1.7s; }
+
+      /* -------------------------------------------------------------
+         6. APERTURA ESCALONADA DE PÉTALOS POR FLOR
+         ------------------------------------------------------------- */
+      
+      /* Flor Central (Main) */
+      .center-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.2s, opacity 0.6s ease-in 1.3s; }
+      .center-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 1.4s, opacity 0.6s ease-in 1.5s; }
+      .center-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
+      .center-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
+      .center-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
+
+      /* Flor Izquierda */
+      .left-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.6s, opacity 0.6s ease-in 1.7s; }
+      .left-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 1.8s, opacity 0.6s ease-in 1.9s; }
+      .left-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 2.0s, opacity 0.6s ease-in 2.1s; }
+      .left-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 2.2s, opacity 0.6s ease-in 2.3s; }
+      .left-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.4s, opacity 0.6s ease-in 2.5s; }
+
+      /* Flor Derecha */
+      .right-flower .petal-outer { transition: transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.9s, opacity 0.6s ease-in 2.0s; }
+      .right-flower .petal-middle { transition: transform 1.5s cubic-bezier(0.34, 1.3, 0.64, 1) 2.1s, opacity 0.6s ease-in 2.2s; }
+      .right-flower .petal-inner { transition: transform 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) 2.3s, opacity 0.6s ease-in 2.4s; }
+      .right-flower .petal-mini { transition: transform 1.3s cubic-bezier(0.34, 1.3, 0.64, 1) 2.5s, opacity 0.6s ease-in 2.6s; }
+      .right-flower .petal-disc { transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.64, 1) 2.7s, opacity 0.6s ease-in 2.8s; }
+
+      /* -------------------------------------------------------------
+         7. COMPORTAMIENTO ABIERTO
+         ------------------------------------------------------------- */
+      .open .sepal {
+        transform: rotate(calc(var(--target-rotate) * 1.3)) scale(calc(var(--target-scale) * 0.45)) translateY(120px);
+        opacity: 0;
+      }
+
+      .open .petal {
+        transform: rotate(var(--target-rotate)) scale(var(--target-scale));
+        opacity: var(--target-opacity);
+      }
+
+      .open .center-core {
+        transform: scale(1);
+      }
+
+      /* -------------------------------------------------------------
+         8. MENSAJE EN LA PARTE INFERIOR
+         ------------------------------------------------------------- */
+      #love-message-card {
+        transform: translate(-50%, 15px);
+        opacity: 0;
+        transition: opacity 1.4s ease-out, 
+                    transform 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+        transition-delay: 0s;
+      }
+
+      #flower-interactive.open + #love-message-card {
+        opacity: 1;
+        transform: translate(-50%, 0);
+        pointer-events: auto;
+        transition-delay: 2.4s;
+      }
+
+      /* -------------------------------------------------------------
+         9. OSCILACIÓN EN ASINCRONÍA DE LA HIERBA
+         ------------------------------------------------------------- */
+      .open .grass:nth-child(2n) { animation: grass-sway-left 6.0s ease-in-out infinite 2.8s; }
+      .open .grass:nth-child(2n+1) { animation: grass-sway-right 7.0s ease-in-out infinite 2.8s; }
+
+      /* Keyframes */
+      @keyframes gentle-breath {
+        0% { transform: scale(1) rotate(0deg); }
+        100% { transform: scale(1.01) rotate(0.4deg); }
+      }
+
+      @keyframes light-pulse {
+        0% { transform: scale(0.95); opacity: 0.7; }
+        100% { transform: scale(1.05); opacity: 1; }
+      }
+
+      @keyframes float-slow {
+        0% { transform: translateY(0) translateX(0) scale(1); }
+        50% { transform: translateY(-40px) translateX(30px) scale(1.1); }
+        100% { transform: translateY(20px) translateX(-20px) scale(0.95); }
+      }
+
+      /* Sway anims: Tallo (Group) e inclinación contraria (Head) */
+      @keyframes group-sway-center {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-1.4deg); }
+        75% { transform: rotate(1.4deg); }
+        100% { transform: rotate(0deg); }
+      }
+      @keyframes head-nod-center {
+        0% { transform: translate(400px, 300px) scale(1) rotate(0deg); }
+        25% { transform: translate(400px, 300px) scale(1) rotate(2deg); }
+        75% { transform: translate(400px, 300px) scale(1) rotate(-2deg); }
+        100% { transform: translate(400px, 300px) scale(1) rotate(0deg); }
+      }
+
+      @keyframes group-sway-left {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-1.8deg); }
+        75% { transform: rotate(1.0deg); }
+        100% { transform: rotate(0deg); }
+      }
+      @keyframes head-nod-left {
+        0% { transform: translate(250px, 420px) scale(0.75) rotate(-25deg); }
+        25% { transform: translate(250px, 420px) scale(0.75) rotate(-22deg); }
+        75% { transform: translate(250px, 420px) scale(0.75) rotate(-28deg); }
+        100% { transform: translate(250px, 420px) scale(0.75) rotate(-25deg); }
+      }
+
+      @keyframes group-sway-right {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(-0.8deg); }
+        75% { transform: rotate(1.8deg); }
+        100% { transform: rotate(0deg); }
+      }
+      @keyframes head-nod-right {
+        0% { transform: translate(550px, 450px) scale(0.7) rotate(20deg); }
+        25% { transform: translate(550px, 450px) scale(0.7) rotate(23deg); }
+        75% { transform: translate(550px, 450px) scale(0.7) rotate(17deg); }
+        100% { transform: translate(550px, 450px) scale(0.7) rotate(20deg); }
+      }
+
+      @keyframes grass-sway-left {
+        0% { transform: scaleY(1) rotate(0deg); }
+        25% { transform: scaleY(1) rotate(-2deg); }
+        75% { transform: scaleY(1) rotate(1.5deg); }
+        100% { transform: scaleY(1) rotate(0deg); }
+      }
+      @keyframes grass-sway-right {
+        0% { transform: scaleY(1) rotate(0deg); }
+        25% { transform: scaleY(1) rotate(-1deg); }
+        75% { transform: scaleY(1) rotate(2.5deg); }
+        100% { transform: scaleY(1) rotate(0deg); }
+      }
+    </style>
+  </head>
+  <body class="w-screen h-dvh overflow-hidden bg-[radial-gradient(circle_at_center,#080612_0%,#030206_100%)] text-[#f3f3f6] font-sans flex justify-center items-center select-none">
+    
+    <!-- Glowing Background Bokeh Lights -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div class="bokeh-light light-1"></div>
+      <div class="bokeh-light light-2"></div>
+      <div class="bokeh-light light-3"></div>
+      <div class="bokeh-light light-4"></div>
+    </div>
+
+    <!-- Soft ambient light behind the garden -->
+    <div class="absolute w-[50%] h-[50%] bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_75%)] rounded-full pointer-events-none z-0 animate-[light-pulse_6s_ease-in-out_infinite_alternate]"></div>
+
+    <div class="relative w-full max-w-[620px] h-full max-h-[820px] flex flex-col justify-center items-center p-6 z-10">
+      
+      <!-- Click Hint Instruction -->
+      <span class="absolute top-[12%] text-white/30 text-xs tracking-[0.2em] uppercase transition-opacity duration-700 ease-out pointer-events-none animate-pulse" id="hint">
+        Haz clic en las flores para verlas crecer y florecer
+      </span>
+
+      <!-- Interactive Flower Container -->
+      <div class="relative w-full aspect-square flex justify-center items-center cursor-pointer" id="flower-interactive">
+        <svg class="w-full h-full filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.65)]" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Petal Shader: Cream and pure white for natural white Gerbera petals -->
+            <linearGradient id="petal-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#ded9ca" />
+              <stop offset="22%" stop-color="#faf8f3" />
+              <stop offset="100%" stop-color="#ffffff" />
+            </linearGradient>
+
+            <!-- Sepal Shader: Green gradients for outer closed bud shell -->
+            <linearGradient id="sepal-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#122a18" />
+              <stop offset="45%" stop-color="#265231" />
+              <stop offset="85%" stop-color="#3d824d" />
+              <stop offset="100%" stop-color="#56ad6b" />
+            </linearGradient>
+
+            <!-- Stem Shader: Organic green gradient -->
+            <linearGradient id="stem-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2c531d" />
+              <stop offset="50%" stop-color="#3d752a" />
+              <stop offset="100%" stop-color="#1b3511" />
+            </linearGradient>
+
+            <!-- Leaf Shader: Semi-translucent glowing turquoise -->
+            <linearGradient id="leaf-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#051c1c" stop-opacity="0.8" />
+              <stop offset="70%" stop-color="#0f4a4a" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="#14ab9e" stop-opacity="0.9" />
+            </linearGradient>
+
+            <!-- Grass Shader: Deep forest teal to green grass blade -->
+            <linearGradient id="grass-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#030c08" />
+              <stop offset="60%" stop-color="#0c2e23" />
+              <stop offset="100%" stop-color="#1b5a45" />
+            </linearGradient>
+
+            <!-- Flower Center Shader: Dark core with magical golden/amber pollen ring -->
+            <radialGradient id="center-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#0a0502" />
+              <stop offset="35%" stop-color="#140b04" />
+              <stop offset="65%" stop-color="#3b2308" />
+              <stop offset="85%" stop-color="#ffca28" />
+              <stop offset="93%" stop-color="#ffa000" />
+              <stop offset="100%" stop-color="#123d42" />
+            </radialGradient>
+
+            <!-- Double glow filters: soft white inner glow + subtle cyan outer aura -->
+            <filter id="petal-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#ffffff" flood-opacity="0.15" />
+              <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#00bcd4" flood-opacity="0.12" />
+            </filter>
+
+            <filter id="sepal-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.22" />
+            </filter>
+
+            <filter id="leaf-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00bcd4" flood-opacity="0.15" />
+            </filter>
+
+            <filter id="stem-shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.35" />
+            </filter>
+
+            <!-- Center Core fuzzy texturing -->
+            <filter id="center-texture" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </defs>
+
+          <!-- Grass Silhouettes at the base (Lush meadow floor) -->
+          <!-- Left Meadow -->
+          <path class="grass" d="M 330 800 Q 250 580 200 420 Q 260 620 330 800 Z" />
+          <path class="grass" d="M 280 800 Q 180 600 130 460 Q 200 640 280 800 Z" />
+          <path class="grass" d="M 220 800 Q 140 670 90 540 Q 160 700 220 800 Z" />
+          <path class="grass" d="M 360 800 Q 300 650 270 520 Q 320 670 360 800 Z" />
+          <!-- Right Meadow -->
+          <path class="grass" d="M 470 800 Q 550 580 600 420 Q 540 620 470 800 Z" />
+          <path class="grass" d="M 520 800 Q 620 600 670 460 Q 600 640 520 800 Z" />
+          <path class="grass" d="M 580 800 Q 660 670 710 540 Q 640 700 580 800 Z" />
+          <path class="grass" d="M 440 800 Q 500 650 530 520 Q 480 670 440 800 Z" />
+
+          <!-- =========================================================
+               FLOWER 2: LEFT FLOWER (Medium, tilted left, blooms second)
+               ========================================================= -->
+          <g class="flower-group left-group">
+            <!-- Left Stem -->
+            <path 
+              class="stem stem-left"
+              d="M 360 800 C 320 660 280 520 250 420" 
+              fill="none" 
+              stroke="url(#stem-grad)" 
+              stroke-width="10" 
+              stroke-linecap="round" 
+              filter="url(#stem-shadow)"
+            />
+            <!-- Left Leaves -->
+            <g class="leaf leaf-l1" transform="translate(335, 610)">
+              <path d="M 0 0 C -20 -5 -35 5 -42 20 C -35 28 -15 20 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <g class="leaf leaf-l2" transform="translate(305, 510)">
+              <path d="M 0 0 C -18 -8 -32 2 -38 16 C -32 24 -14 18 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <!-- Left Head -->
+            <g class="flower-head-wrapper left-flower" id="flower-head-wrapper-left">
+              <g class="flower-head-inner">
+                <!-- Outer Petals -->
+                {outerPetals.map(p => (
+                  <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Middle Petals -->
+                {middlePetals.map(p => (
+                  <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Inner Petals -->
+                {innerPetals.map(p => (
+                  <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Mini Petals -->
+                {miniPetals.map(p => (
+                  <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Disc Petals -->
+                {discRingPetals.map(p => (
+                  <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                ))}
+                <!-- Sepals -->
+                {sepals.map(s => (
+                  <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" filter="url(#sepal-shadow)" />
+                ))}
+                <!-- Center Core -->
+                <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" filter="url(#center-texture)" />
+              </g>
+            </g>
+          </g>
+
+          <!-- =========================================================
+               FLOWER 3: RIGHT FLOWER (Short, tilted right, blooms third)
+               ========================================================= -->
+          <g class="flower-group right-group">
+            <!-- Right Stem -->
+            <path 
+              class="stem stem-right"
+              d="M 440 800 C 480 670 520 540 550 450" 
+              fill="none" 
+              stroke="url(#stem-grad)" 
+              stroke-width="9.5" 
+              stroke-linecap="round" 
+              filter="url(#stem-shadow)"
+            />
+            <!-- Right Leaves -->
+            <g class="leaf leaf-r1" transform="translate(465, 620)">
+              <path d="M 0 0 C 20 -5 35 5 42 20 C 35 28 15 20 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <g class="leaf leaf-r2" transform="translate(500, 525)">
+              <path d="M 0 0 C 18 -8 32 2 38 16 C 32 24 14 18 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <!-- Right Head -->
+            <g class="flower-head-wrapper right-flower" id="flower-head-wrapper-right">
+              <g class="flower-head-inner">
+                <!-- Outer Petals -->
+                {outerPetals.map(p => (
+                  <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Middle Petals -->
+                {middlePetals.map(p => (
+                  <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Inner Petals -->
+                {innerPetals.map(p => (
+                  <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Mini Petals -->
+                {miniPetals.map(p => (
+                  <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Disc Petals -->
+                {discRingPetals.map(p => (
+                  <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                ))}
+                <!-- Sepals -->
+                {sepals.map(s => (
+                  <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" filter="url(#sepal-shadow)" />
+                ))}
+                <!-- Center Core -->
+                <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" filter="url(#center-texture)" />
+              </g>
+            </g>
+          </g>
+
+          <!-- =========================================================
+               FLOWER 1: MAIN CENTER FLOWER (Tallest, blooms first)
+               ========================================================= -->
+          <g class="flower-group center-group">
+            <!-- Center Stem -->
+            <path 
+              class="stem stem-center"
+              d="M 390 800 C 393 630 397 465 400 300" 
+              fill="none" 
+              stroke="url(#stem-grad)" 
+              stroke-width="13" 
+              stroke-linecap="round" 
+              filter="url(#stem-shadow)"
+            />
+            <!-- Center Leaves -->
+            <!-- Pair 1 (Bottom, y=650) -->
+            <g class="leaf leaf-l1" transform="translate(393, 650)">
+              <path d="M 0 0 C -25 -5 -45 5 -55 25 C -45 35 -20 25 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <g class="leaf leaf-r1" transform="translate(393, 650)">
+              <path d="M 0 0 C 25 -5 45 5 55 25 C 45 35 20 25 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <!-- Pair 2 (Middle, y=520) -->
+            <g class="leaf leaf-l2" transform="translate(397, 520)">
+              <path d="M 0 0 C -22 -10 -40 0 -48 20 C -40 30 -20 22 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <g class="leaf leaf-r2" transform="translate(397, 520)">
+              <path d="M 0 0 C 22 -10 40 0 48 20 C 40 30 20 22 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <!-- Pair 3 (Top, y=400) -->
+            <g class="leaf leaf-l3" transform="translate(399, 400)">
+              <path d="M 0 0 C -20 -12 -35 -3 -42 16 C -35 25 -18 18 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <g class="leaf leaf-r3" transform="translate(399, 400)">
+              <path d="M 0 0 C 20 -12 35 -3 42 16 C 35 25 18 18 0 0 Z" fill="url(#leaf-grad)" filter="url(#leaf-shadow)" />
+            </g>
+            <!-- Center Head -->
+            <g class="flower-head-wrapper center-flower" id="flower-head-wrapper">
+              <g class="flower-head-inner" id="flower-head-group">
+                <!-- Outer Petals -->
+                {outerPetals.map(p => (
+                  <path class="petal petal-outer" d="M 0 0 C -8 -25 -13 -95 -2 -170 C -1 -175 1 -175 2 -170 C 13 -95 8 -25 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Middle Petals -->
+                {middlePetals.map(p => (
+                  <path class="petal petal-middle" d="M 0 0 C -7.5 -22 -12 -90 -2 -160 C -1 -165 1 -165 2 -160 C 12 -90 7.5 -22 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Inner Petals -->
+                {innerPetals.map(p => (
+                  <path class="petal petal-inner" d="M 0 0 C -7 -20 -11 -85 -2 -145 C -1 -150 1 -150 2 -145 C 11 -85 7 -20 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Mini Petals -->
+                {miniPetals.map(p => (
+                  <path class="petal petal-mini" d="M 0 0 C -6.5 -18 -10 -80 -1.5 -130 C -0.8 -134 0.8 -134 1.5 -130 C 10 -80 6.5 -18 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" filter="url(#petal-shadow)" />
+                ))}
+                <!-- Disc Petals -->
+                {discRingPetals.map(p => (
+                  <path class="petal petal-disc" d="M 0 0 C -5.5 -15 -8.5 -70 -1 -110 C -0.5 -113 0.5 -113 1 -110 C 8.5 -70 5.5 -15 0 0" transform={`rotate(${p.rotate}) scale(${p.scale})`} style={`--target-rotate: ${p.rotate}deg; --target-scale: ${p.scale}; --target-opacity: ${p.opacity}; --closed-rotate: ${p.closed.rotate}deg; --closed-scale-x: ${p.closed.scaleX}; --closed-scale-y: ${p.closed.scaleY}; --closed-opacity: ${p.closed.opacity};`} fill="url(#petal-grad)" />
+                ))}
+                <!-- Sepals -->
+                {sepals.map(s => (
+                  <path class="sepal" d="M 0 0 C -12 -25 -20 -95 -2 -160 C -1 -163 1 -163 2 -160 C 22 -95 12 -25 0 0" transform={`rotate(${s.rotate}) scale(${s.scale})`} style={`--target-rotate: ${s.rotate}deg; --target-scale: ${s.scale}; --closed-rotate: ${s.closed.rotate}deg; --closed-scale-x: ${s.closed.scaleX}; --closed-scale-y: ${s.closed.scaleY}; --closed-opacity: ${s.closed.opacity};`} fill="url(#sepal-grad)" filter="url(#sepal-shadow)" />
+                ))}
+                <!-- Center Core -->
+                <circle class="center-core" cx="0" cy="0" r="50" fill="url(#center-grad)" filter="url(#center-texture)" />
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Secret Message Overlay: Positioned at the bottom (Centered on X, responsive block) -->
+      <div class="absolute bottom-[8%] left-1/2 w-[90%] max-w-[500px] pointer-events-none z-50 text-center" id="love-message-card">
+        <!-- Glassmorphic dark container styled to look beautiful on both mobile and PC -->
+        <div class="bg-[#0b0816]/80 backdrop-blur-[12px] border border-white/10 rounded-2xl px-6 py-4.5 shadow-[0_15px_30px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.08)] flex justify-center items-center">
+          <span class="font-display italic text-[clamp(1.05rem,2.5vw,1.3rem)] font-normal leading-relaxed tracking-wider text-[#fffdfa] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+            {message}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas/HTML Particle Overlay -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden z-20" id="particles-container"></div>
+
+    <!-- Client-side Interactions -->
+    <script>
+      let backgroundIntervals = [];
+
+      // Dandelion seed SVG generator
+      const createSeed = () => {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const seed = document.createElement('div');
+        seed.style.position = 'absolute';
+        
+        const startX = Math.random() * window.innerWidth;
+        const startY = window.innerHeight + 30;
+        const size = Math.random() * 8 + 6;
+        
+        seed.style.left = `${startX}px`;
+        seed.style.top = `${startY}px`;
+        seed.style.width = `${size}px`;
+        seed.style.height = `${size * 2.5}px`;
+        seed.style.pointerEvents = 'none';
+        
+        seed.innerHTML = `
+          <svg viewBox="0 0 10 25" class="w-full h-full opacity-50 text-white/70 fill-current">
+            <line x1="5" y1="20" x2="5" y2="5" stroke="currentColor" stroke-width="0.8" />
+            <path d="M 5 5 L 2 1 M 5 5 L 8 1 M 5 5 L 1 3 M 5 5 L 9 3 M 5 5 L 5 0" stroke="currentColor" stroke-width="0.6" />
+            <circle cx="5" cy="20" r="1.2" fill="currentColor" />
+          </svg>
+        `;
+        
+        container.appendChild(seed);
+        
+        const endX = startX + (Math.random() - 0.4) * 350 - 100;
+        const endY = -50;
+        const duration = 12000 + Math.random() * 8000;
+        const rot = (Math.random() - 0.5) * 60;
+        
+        const anim = seed.animate([
+          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
+          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.7, offset: 0.1 },
+          { transform: `translate(${endX - startX}px, ${endY - startY}px) rotate(${rot}deg)`, opacity: 0 }
+        ], {
+          duration: duration,
+          easing: 'linear'
+        });
+        
+        anim.onfinish = () => seed.remove();
+      };
+
+      const createSeedAtHeight = () => {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const seed = document.createElement('div');
+        seed.style.position = 'absolute';
+        
+        const startX = Math.random() * window.innerWidth;
+        const startY = Math.random() * (window.innerHeight - 100);
+        const size = Math.random() * 8 + 6;
+        
+        seed.style.left = `${startX}px`;
+        seed.style.top = `${startY}px`;
+        seed.style.width = `${size}px`;
+        seed.style.height = `${size * 2.5}px`;
+        seed.style.pointerEvents = 'none';
+        
+        seed.innerHTML = `
+          <svg viewBox="0 0 10 25" class="w-full h-full opacity-50 text-white/70 fill-current">
+            <line x1="5" y1="20" x2="5" y2="5" stroke="currentColor" stroke-width="0.8" />
+            <path d="M 5 5 L 2 1 M 5 5 L 8 1 M 5 5 L 1 3 M 5 5 L 9 3 M 5 5 L 5 0" stroke="currentColor" stroke-width="0.6" />
+            <circle cx="5" cy="20" r="1.2" fill="currentColor" />
+          </svg>
+        `;
+        
+        container.appendChild(seed);
+        
+        const endX = startX + (Math.random() - 0.4) * 350 - 100;
+        const endY = -50;
+        const remainingYRatio = startY / window.innerHeight;
+        const duration = (12000 + Math.random() * 8000) * remainingYRatio;
+        const rot = (Math.random() - 0.5) * 60;
+        
+        const anim = seed.animate([
+          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.6 },
+          { transform: `translate(${endX - startX}px, ${endY - startY}px) rotate(${rot}deg)`, opacity: 0 }
+        ], {
+          duration: duration,
+          easing: 'linear'
+        });
+        
+        anim.onfinish = () => seed.remove();
+      };
+
+      // Firefly generator
+      const createFirefly = () => {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const f = document.createElement('div');
+        const size = Math.random() * 5 + 3.5;
+        const color = '#ffd54f';
+        
+        f.style.position = 'absolute';
+        f.style.width = `${size}px`;
+        f.style.height = `${size}px`;
+        f.style.backgroundColor = color;
+        f.style.borderRadius = '50%';
+        f.style.boxShadow = `0 0 ${size * 2.5}px ${color}, 0 0 ${size * 0.8}px #fff`;
+        
+        const startX = Math.random() * window.innerWidth;
+        const startY = window.innerHeight + 30;
+        f.style.left = `${startX}px`;
+        f.style.top = `${startY}px`;
+        f.style.pointerEvents = 'none';
+        
+        container.appendChild(f);
+        
+        const endX = startX + (Math.random() - 0.5) * 250;
+        const endY = -50;
+        const duration = 9000 + Math.random() * 5005;
+        
+        const anim = f.animate([
+          { transform: 'translate(0, 0) scale(1)', opacity: 0 },
+          { opacity: 0.8, offset: 0.15 },
+          { opacity: 0.35, offset: 0.5 },
+          { opacity: 0.9, offset: 0.8 },
+          { transform: `translate(${endX - startX}px, ${endY - startY}px) scale(0.6)`, opacity: 0 }
+        ], {
+          duration: duration,
+          easing: 'ease-in-out'
+        });
+        
+        anim.onfinish = () => f.remove();
+      };
+
+      const createFireflyAtHeight = () => {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const f = document.createElement('div');
+        const size = Math.random() * 5 + 3.5;
+        const color = '#ffd54f';
+        
+        f.style.position = 'absolute';
+        f.style.width = `${size}px`;
+        f.style.height = `${size}px`;
+        f.style.backgroundColor = color;
+        f.style.borderRadius = '50%';
+        f.style.boxShadow = `0 0 ${size * 2.5}px ${color}, 0 0 ${size * 0.8}px #fff`;
+        
+        const startX = Math.random() * window.innerWidth;
+        const startY = Math.random() * (window.innerHeight - 100);
+        f.style.left = `${startX}px`;
+        f.style.top = `${startY}px`;
+        f.style.pointerEvents = 'none';
+        
+        container.appendChild(f);
+        
+        const endX = startX + (Math.random() - 0.5) * 250;
+        const endY = -50;
+        const remainingYRatio = startY / window.innerHeight;
+        const duration = (9000 + Math.random() * 5005) * remainingYRatio;
+        
+        const anim = f.animate([
+          { transform: 'translate(0, 0) scale(1)', opacity: 0.7 },
+          { opacity: 0.4, offset: 0.4 },
+          { opacity: 0.8, offset: 0.7 },
+          { transform: `translate(${endX - startX}px, ${endY - startY}px) scale(0.6)`, opacity: 0 }
+        ], {
+          duration: duration,
+          easing: 'ease-in-out'
+        });
+        
+        anim.onfinish = () => f.remove();
+      };
+
+      // Sparkle Particle burst on click (local click burst)
+      const createSparkles = (x, y) => {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+
+        const colors = [
+          '#ffffff', 
+          '#faf6ec', 
+          '#ffe4e1', 
+          '#fffacd', 
+          'rgba(255, 255, 255, 0.4)'
+        ];
+
+        for (let i = 0; i < 28; i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle';
+
+          const size = Math.random() * 8 + 4;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * 160 + 80;
+
+          sparkle.style.position = 'absolute';
+          sparkle.style.width = `${size}px`;
+          sparkle.style.height = `${size}px`;
+          sparkle.style.backgroundColor = color;
+          sparkle.style.borderRadius = '50%';
+          sparkle.style.left = `${x}px`;
+          sparkle.style.top = `${y}px`;
+          sparkle.style.boxShadow = `0 0 ${size * 1.5}px ${color}`;
+          sparkle.style.pointerEvents = 'none';
+
+          const tx = Math.cos(angle) * distance;
+          const ty = Math.sin(angle) * distance;
+          const rot = Math.random() * 360;
+
+          const animation = sparkle.animate([
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+            { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0) rotate(${rot}deg)`, opacity: 0 }
+          ], {
+            duration: 1200 + Math.random() * 500,
+            easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)',
+            fill: 'forwards'
+          });
+
+          container.appendChild(sparkle);
+          animation.onfinish = () => sparkle.remove();
+        }
+      };
+
+      const startEcosystem = () => {
+        stopEcosystem();
+        
+        // Spawn initial particles at random heights immediately
+        for (let i = 0; i < 7; i++) {
+          createSeedAtHeight();
+        }
+        for (let i = 0; i < 6; i++) {
+          createFireflyAtHeight();
+        }
+
+        // Set intervals for continuous drift
+        backgroundIntervals.push(setInterval(createSeed, 650));
+        backgroundIntervals.push(setInterval(createFirefly, 450));
+      };
+
+      const stopEcosystem = () => {
+        backgroundIntervals.forEach(clearInterval);
+        backgroundIntervals = [];
+      };
+
+      // Set up click events
+      document.addEventListener('DOMContentLoaded', () => {
+        const flowerContainer = document.getElementById('flower-interactive');
+        const messageCard = document.getElementById('love-message-card');
+        const hintText = document.getElementById('hint');
+        
+        // Select all flower groups to activate opening animations
+        const flowerGroups = document.querySelectorAll('.flower-group');
+
+        if (flowerContainer && messageCard) {
+          flowerContainer.addEventListener('click', (event) => {
+            // Toggle open state on the main interactive container
+            const isOpen = flowerContainer.classList.toggle('open');
+
+            // Propagate the open class to each individual flower group
+            flowerGroups.forEach(group => {
+              group.classList.toggle('open', isOpen);
+            });
+
+            // Hide/Show visual hint text
+            if (hintText) {
+              if (isOpen) {
+                hintText.style.opacity = '0';
+              } else {
+                hintText.style.opacity = '1';
+              }
+            }
+
+            // Trigger background forest particles and local bursts
+            if (isOpen) {
+              startEcosystem();
+              
+              // Fire local particles from click coordinate
+              const clickX = event.clientX;
+              const clickY = event.clientY;
+              createSparkles(clickX, clickY);
+            } else {
+              stopEcosystem();
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
